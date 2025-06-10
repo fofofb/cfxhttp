@@ -477,6 +477,26 @@ async function fetch(request, env, ctx) {
 
     if (request.method === 'GET') {
         const url = new URL(request.url)
+        if (url.pathname.includes('xhttp/')) {
+            const urluuid = url.searchParams.get('urluuid')
+            if (urluuid && urluuid === cfg.UUID) {
+                const id = cfg.UUID;
+                const host = url.hostname;
+                // 确保 path 以 / 结尾，并且是 URL 编码的
+                let requestPath = url.pathname;
+                if (!requestPath.endsWith('/')) {
+                    requestPath += '/';
+                }
+                const encodedPath = encodeURIComponent(requestPath);
+
+                const vlessLink = `vless://${id}@${host}:443?encryption=none&security=tls&sni=${host}&alpn=h2&fp=chrome&type=xhttp&host=${host}&path=${encodedPath}&mode=stream-one#${host}`
+                return new Response(vlessLink, {
+                    headers: {
+                        'Content-Type': 'text/plain',
+                    },
+                })
+            }
+        }
         const items = [url.pathname, url.search]
         for (let item of items) {
             if (item.indexOf(`${cfg.UUID}`) >= 0) {
